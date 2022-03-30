@@ -49,8 +49,7 @@ sub new {
 sub install() {
     my ( $self, $args ) = @_;
 
-    my $db = Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Database->new();
-    $db->install();
+    $self->table();
 }
 
 ## This is the 'upgrade' method. It will be triggered when a newer version of a
@@ -68,6 +67,31 @@ sub uninstall() {
     my ( $self, $args ) = @_;
 
     return 1;
+}
+
+sub table {
+    my ($self) = @_;
+
+    my $dbh = C4::Context->dbh;
+    my $transactions = $self->get_qualified_table_name('transactions');
+    $dbh->do("
+        CREATE TABLE ".$transactions." (
+            transaction_id int(11) NOT NULL auto_increment,
+            borrowernumber int(11) NOT NULL,
+            accountlines_id int(11),
+            status ENUM('paid','pending','cancelled','unsent','processing') DEFAULT 'unsent',
+            timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            description TEXT NOT NULL,
+            price_in_cents int(11) NOT NULL,
+            user_branch varchar(10),
+            is_self_payment int(11) NOT NULL DEFAULT 0,
+            PRIMARY KEY (transaction_id),
+            FOREIGN KEY (accountlines_id)
+                REFERENCES accountlines(accountlines_id),
+            FOREIGN KEY (borrowernumber)
+                REFERENCES borrowers(borrowernumber)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ");
 }
 
 1;
