@@ -17,9 +17,6 @@ package Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::CPU;
 # You should have received a copy of the GNU General Public License
 # along with Koha; if not, see <http://www.gnu.org/licenses>.
 
-
-use base qw(Koha::Payment::POS);
-
 use C4::Context;
 
 use Data::Dumper qw(Dumper);
@@ -35,9 +32,6 @@ use Koha::Patron;
 use Koha::Patrons;
 use Koha::Items;
 use Koha::Logger;
-use Koha::PaymentsTransaction;
-use Koha::PaymentsTransactions;
-use Koha::Exception::NoSystemPreference;
 
 sub new {
     my ($class, $self) = @_;
@@ -76,7 +70,7 @@ Completes the payment in REST API.
 sub complete_payment {
     my ($class, $args) = @_;
 
-    my $transaction = Koha::PaymentsTransactions->find($args->{Id});
+    my $transaction;# = Koha::PaymentsTransactions->find($args->{Id});
     return if not $transaction or $transaction->is_self_payment == 1;
     $transaction->CompletePayment($class->_get_response_string($args->{Status})->{status});
 };
@@ -203,7 +197,7 @@ sub send_payment {
     my $response = eval {
         $content = JSON->new->canonical(1)->encode($payment);
 
-        my $transaction = Koha::PaymentsTransactions->find($payment->{Id});
+        my $transaction;# = Koha::PaymentsTransactions->find($payment->{Id});
         return { error => "Error: No transaction found with id ".$payment->{Id}, status => 0 }
             if not $transaction;
         return { error => "Error: Transaction ".$payment->{Id}." is not a POS payment", status => 0 }
@@ -232,7 +226,7 @@ sub send_payment {
         $logger->info("Sent payment: ".Dumper($payment));
         my $request = $ua->request($req);
 
-        $transaction = Koha::PaymentsTransactions->find($payment->{Id});
+        $transaction;# = Koha::PaymentsTransactions->find($payment->{Id});
         my $payment_already_paid = 1 if $transaction->status eq "paid"; # Already paid via REST API!
         return { status => 1 } if $payment_already_paid;
 
@@ -263,7 +257,7 @@ sub send_payment {
     if ($@ || $response->{'error'}) {
         my $error = $@ || $response->{'error'};
 
-        my $transaction = Koha::PaymentsTransactions->find($payment->{Id});
+        my $transaction;# = Koha::PaymentsTransactions->find($payment->{Id});
         $logger->error("No transaction found with id ".$payment->{Id}) if not $transaction;
         return JSON->new->utf8->canonical(1)->encode({ error => "Error: Transaction not found " .$payment->{Id}, status => 0 }) if not $transaction;
         return JSON->new->utf8->canonical(1)->encode({ status => 1 }) if $transaction->status eq "paid"; # Already paid via REST API!
@@ -377,7 +371,7 @@ sub _calculate_response_hash {
     my ($class, $resp) = @_;
     my $data = "";
 
-    my $transaction = Koha::PaymentsTransactions->find($resp->{Id});
+    my $transaction;# = Koha::PaymentsTransactions->find($resp->{Id});
     return if not $transaction;
 
     $data .= $resp->{Source} if defined $resp->{Source};
