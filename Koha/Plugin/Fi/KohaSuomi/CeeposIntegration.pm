@@ -1,4 +1,4 @@
-package Koha::Plugin::Fi::KohaSuomi::PosIntegration;
+package Koha::Plugin::Fi::KohaSuomi::CeeposIntegration;
 
 ## It's good practice to use Modern::Perl
 use Modern::Perl;
@@ -8,6 +8,8 @@ use base qw(Koha::Plugins::Base);
 ## We will also need to include any Koha libraries we want to access
 use C4::Context;
 use utf8;
+
+use Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Database;
 
 ## Here we set our plugin version
 our $VERSION = "1.0.0";
@@ -47,7 +49,8 @@ sub new {
 sub install() {
     my ( $self, $args ) = @_;
 
-    return 1;
+    my $db = Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Database->new();
+    $db->install();
 }
 
 ## This is the 'upgrade' method. It will be triggered when a newer version of a

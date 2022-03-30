@@ -1,5 +1,4 @@
-
-# Koha-Suomi plugin PosIntegration
+# Koha-Suomi plugin CeeposIntegration
 
 This is the plugin description
 
@@ -32,4 +31,3 @@ Once set up is complete you will need to alter your UseKohaPlugins system prefer
 # Configuring
 
 Here is the place for configurations
-
