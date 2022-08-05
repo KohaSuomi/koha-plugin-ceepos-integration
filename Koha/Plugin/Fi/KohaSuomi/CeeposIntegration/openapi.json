@@ -1,0 +1,150 @@
+{
+  "/payments/ceepos": {
+    "post": {
+      "x-mojo-to": "Fi::KohaSuomi::CeeposIntegration::Controllers::TransactionController#pay",
+      "operationId": "payCPU",
+      "x-koha-authorization": {
+        "permissions": {
+          "updatecharges": "1"
+        }
+      },
+      "parameters": [
+        {
+          "name": "body",
+          "in": "body",
+          "description": "A JSON object containing updated fields",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      ],
+      "tags": [
+        "CeeposPayment"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "responses": {
+        "200": {
+          "description": "Success",
+          "schema": {
+            "type": "string"
+          }
+        },
+        "401": {
+          "description": "Unauthorized",
+          "schema": {
+            "type": "object"
+          }
+        },
+        "400": {
+          "description": "Bad request",
+          "schema": {
+            "type": "object"
+          }
+        },
+        "404": {
+          "description": "Not found",
+          "schema": {
+            "type": "object"
+          }
+        },
+        "500": {
+          "description": "Internal error",
+          "schema": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  "/payments/ceepos/{invoicenumber}/report": {
+    "post": {
+      "x-mojo-to": "Fi::KohaSuomi::CeeposIntegration::Controllers::TransactionController#report",
+      "operationId": "cpuPosReport",
+      "tags": [
+        "POS Integration"
+      ],
+      "parameters": [
+        {
+          "name": "invoicenumber",
+          "in": "path",
+          "description": "Internal invoice identifier",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "body",
+          "in": "body",
+          "description": "New report",
+          "required": true,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "Source": {
+                "type": "string"
+              },
+              "Id": {
+                "description": "Invoice identification number",
+                "type": "string"
+              },
+              "Status": {
+                "description": "Status of payment",
+                "type": "integer"
+              },
+              "Reference": {
+                "description": "Receipt number for successful payments",
+                "type": "string"
+              },
+              "Hash": {
+                "description": "Hash for response parameters",
+                "type": "string"
+              }
+            },
+            "required": [
+              "Id",
+              "Status",
+              "Hash"
+            ]
+          }
+        }
+      ],
+      "consumes": [
+        "application/json"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "responses": {
+        "200": {
+          "description": "Response for receiving report",
+          "schema": {
+            "type": "string"
+          }
+        },
+        "400": {
+          "description": "Bad request",
+          "schema": {
+            "type": "object"
+          }
+        },
+        "404": {
+          "description": "Not found",
+          "schema": {
+            "type": "object"
+          }
+        },
+        "500": {
+          "description": "Internal error",
+          "schema": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

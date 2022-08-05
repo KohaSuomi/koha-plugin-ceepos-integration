@@ -8,6 +8,7 @@ use base qw(Koha::Plugins::Base);
 ## We will also need to include any Koha libraries we want to access
 use C4::Context;
 use utf8;
+use JSON;
 
 use Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Database;
 
@@ -42,6 +43,34 @@ sub new {
 
     return $self;
 }
+
+## If your tool is complicated enough to needs it's own setting/configuration
+## you will want to add a 'configure' method to your plugin like so.
+## Here I am throwing all the logic into the 'configure' method, but it could
+## be split up like the 'report' method is.
+sub configure {
+    my ( $self, $args ) = @_;
+    my $cgi = $self->{'cgi'};
+    unless ( $cgi->param('save') ) {
+        my $template = $self->get_template({ file => 'config.tt' });
+
+        ## Grab the values we already have for our settings, if any exist
+        $template->param(
+            ceeposintegration => $self->retrieve_data('ceeposintegration')
+        );
+
+        print $cgi->header(-charset    => 'utf-8');
+        print $template->output();
+    }
+    else {
+        $self->store_data(
+            {
+                ceeposintegration  => $cgi->param('ceeposintegration')
+            }
+        );
+        $self->go_home();
+    }
+}
 ## This is the 'install' method. Any database tables or other setup that should
 ## be done when the plugin if first installed should be executed in this method.
 ## The installation method should always return true if the installation succeeded
@@ -69,6 +98,21 @@ sub uninstall() {
     return 1;
 }
 
+sub api_routes {
+    my ( $self, $args ) = @_;
+
+    my $spec_str = $self->mbf_read('openapi.json');
+    my $spec     = decode_json($spec_str);
+
+    return $spec;
+}
+
+sub api_namespace {
+    my ( $self ) = @_;
+    
+    return 'kohasuomi';
+}
+
 sub table {
     my ($self) = @_;
 
@@ -76,16 +120,19 @@ sub table {
     my $transactions = $self->get_qualified_table_name('transactions');
     $dbh->do("
         CREATE TABLE ".$transactions." (
-            transaction_id int(11) NOT NULL auto_increment,
+            payment_id int(11) NOT NULL auto_increment,
+            transaction_id varchar(150) NOT NULL,
             borrowernumber int(11) NOT NULL,
-            accountlines_id int(11),
+            accountlines_id int(11) NOT NULL,
             status ENUM('paid','pending','cancelled','unsent','processing') DEFAULT 'unsent',
             timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             description TEXT NOT NULL,
+            payment_type TEXT NOT NULL,
             price_in_cents int(11) NOT NULL,
-            user_branch varchar(10),
-            is_self_payment int(11) NOT NULL DEFAULT 0,
-            PRIMARY KEY (transaction_id),
+            manager_id int(11) NOT NULL,
+            office varchar(50) NOT NULL,
+            branch varchar(20) NOT NULL,
+            PRIMARY KEY (payment_id),
             FOREIGN KEY (accountlines_id)
                 REFERENCES accountlines(accountlines_id),
             FOREIGN KEY (borrowernumber)

@@ -58,7 +58,25 @@ sub dbh {
 sub getTransactionData {
     my ($self, $id) = @_;
 
+    my $sth = $self->dbh->prepare("SELECT * FROM ".$self->transactions." WHERE payment_id = ?;");
+    $sth->execute($id);
+    return $sth->fetchrow_hashref;
+
+}
+
+sub listTransactions {
+    my ($self, $id) = @_;
+
     my $sth = $self->dbh->prepare("SELECT * FROM ".$self->transactions." WHERE transaction_id = ?;");
+    $sth->execute($id);
+    return $sth->fetchall_arrayref({});
+
+}
+
+sub getTransactionDataByAccountline {
+    my ($self, $id) = @_;
+
+    my $sth = $self->dbh->prepare("SELECT * FROM ".$self->transactions." WHERE accountlines_id = ?;");
     $sth->execute($id);
     return $sth->fetchrow_hashref;
 
@@ -68,8 +86,8 @@ sub setTransactionData {
     my ($self, @params) = @_;
     
     my $sth=$self->dbh->prepare("INSERT INTO ".$self->transactions." 
-    (borrowernumber,accountlines_id,status,description,price_in_cents,user_branch,is_self_payment) 
-    VALUES (?,?,?,?,?,?,?);");
+    (transaction_id,borrowernumber,accountlines_id,status,description,payment_type,price_in_cents,manager_id,office,branch)
+    VALUES (?,?,?,?,?,?,?,?,?,?);");
     $sth->execute(@params);
     return $sth->{mysql_insertid};
     
@@ -78,7 +96,31 @@ sub setTransactionData {
 sub updateTransactionStatus {
     my ($self, @params) = @_;
     
-    my $sth=$self->dbh->prepare("UPDATE ".$self->transactions." SET status = ? WHERE id = ?;");
+    my $sth=$self->dbh->prepare("UPDATE ".$self->transactions." SET status = ? WHERE transaction_id = ?;");
+    return $sth->execute(@params);
+    
+}
+
+sub updatePaymentStatus {
+    my ($self, @params) = @_;
+    
+    my $sth=$self->dbh->prepare("UPDATE ".$self->transactions." SET status = ? WHERE payment_id = ?;");
+    return $sth->execute(@params);
+    
+}
+
+sub updateTransactions {
+    my ($self, @params) = @_;
+    
+    my $sth=$self->dbh->prepare("UPDATE ".$self->transactions." SET status = ?, description = ? WHERE transaction_id = ?;");
+    return $sth->execute(@params);
+    
+}
+
+sub updatePayment {
+    my ($self, @params) = @_;
+    
+    my $sth=$self->dbh->prepare("UPDATE ".$self->transactions." SET status = ?, description = ? WHERE payment_id = ?;");
     return $sth->execute(@params);
     
 }

@@ -33,6 +33,8 @@ use Koha::Patrons;
 use Koha::Items;
 use Koha::Logger;
 
+use Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Transactions;
+
 sub new {
     my ($class, $self) = @_;
 
@@ -41,169 +43,105 @@ sub new {
     return $self;
 };
 
-=head2 add_custom_parameters
-
-  &add_custom_parameters($payment, $query);
-
-Adds custom parameters from $query into $payment.
-
-Returns modified $payment where custom parameters from $query have been added.
-
-=cut
-
-sub add_custom_parameters {
-    my ($class, $payment, $query) = @_;
-
-    $payment->{'Office'} = $query->param("office");
-
-    return $payment;
-};
-
-=head2 complete_payment
-
-  &complete_payment($args);
-
-Completes the payment in REST API.
-
-=cut
-
-sub complete_payment {
-    my ($class, $args) = @_;
-
-    my $transaction;# = Koha::PaymentsTransactions->find($args->{Id});
-    return if not $transaction or $transaction->is_self_payment == 1;
-    $transaction->CompletePayment($class->_get_response_string($args->{Status})->{status});
-};
-
-=head2 get_custom_parameters
-
-  &get_custom_parameters($payment);
-
-Gets custom parameters in order to display custom parameters in paycollect.tt.
-This subroutine is given a prepared $payment in paycollect.pl.
-
-=cut
-
-sub get_custom_parameters {
-    my ($class, $args) = @_;
-
-    return { Office => $args->{'Office'} };
-};
-
-=head2 get_prepared_products
-
-  &get_prepared_products($products, $branch);
-
-Converts C<$products> from Koha::PaymentsTransaction->GetProducts() into a format
-that matches CPU documentation, and converts Koha accounttypes from accountlines
-into product codes recognized by CPU payment server.
-
-=cut
-
-sub get_prepared_products {
-    my ($class, $products, $branch) = @_;
-    return $class->_account_types_to_itemnumbers(
-                       $class->_convert_to_cpu_products($products),
-                       $branch
-                    );
+sub transactions {
+    my ($self) = @_;
+    return Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Transactions->new;
 }
 
-=head2 get_transaction_id
+# =head2 add_custom_parameters
 
-  &get_transaction_id($query);
+#   &add_custom_parameters($payment, $query);
 
-Returns the transaction id (payment id) from C<$query>.
+# Adds custom parameters from $query into $payment.
 
-Returns transaction id if it is found in C<$query>.
+# Returns modified $payment where custom parameters from $query have been added.
 
-=cut
+# =cut
 
-sub get_transaction_id {
-    my ($class, $query) = @_;
+# sub add_custom_parameters {
+#     my ($class, $payment, $query) = @_;
 
-    return $query->param("Id");
-};
+#     $payment->{'Office'} = $query->param("office");
 
-=head2 is_valid_hash
+#     return $payment;
+# };
 
-  &is_valid_hash($query);
+# =head2 complete_payment
 
-Validates C<$query> by calculating its checksum.
+#   &complete_payment($args);
 
-Returns true if valid checksum.
+# Completes the payment in REST API.
 
-=cut
+# =cut
 
-sub is_valid_hash {
-    my ($class, $query) = @_;
+# sub complete_payment {
+#     my ($class, $args) = @_;
 
-    if (ref($query) eq "CGI") {
-        return $query->param("Hash") eq $class->_calculate_response_hash({ $query->Vars() });
-    } else {
-        return $query->{'Hash'} eq $class->_calculate_response_hash($query);
-    }
-};
+#     my $transaction = $self->transactions->find($args->{Id});
+#     return if not $transaction or $transaction->is_self_payment == 1;
+#     $transaction->CompletePayment($class->_get_response_string($args->{Status})->{status});
+# };
 
-=head2 is_valid_return_address
+# =head2 get_custom_parameters
 
-  &is_valid_return_address($query);
+#   &get_custom_parameters($payment);
 
-Checks the C<$query> to determine whether given
-parameter values are not tampered with.
+# Gets custom parameters in order to display custom parameters in paycollect.tt.
+# This subroutine is given a prepared $payment in paycollect.pl.
 
-Return true if the parameters are valid.
+# =cut
 
-=cut
+# sub get_custom_parameters {
+#     my ($class, $args) = @_;
 
-sub is_valid_return_address {
-    my ($class, $query) = @_;
+#     return { Office => $args->{'Office'} };
+# };
 
-    return if not $class->is_return_address($query);
+# =head2 get_prepared_products
 
-    return $query->param("Hash") eq _calculate_response_hash($query->param("Hash"));
-};
+#   &get_prepared_products($products, $branch);
 
-=head2 prepare_payment
+# Converts C<$products> from Koha::PaymentsTransaction->GetProducts() into a format
+# that matches CPU documentation, and converts Koha accounttypes from accountlines
+# into product codes recognized by CPU payment server.
 
-  &prepare_payment($payment, $input);
+# =cut
 
-Converts C<$payment> HASH from paycollect.pl into a format
-accepted by your POS provider.
+# sub get_prepared_products {
+#     my ($class, $products, $branch) = @_;
+#     return $class->_account_types_to_itemnumbers(
+#                        $class->_convert_to_cpu_products($products),
+#                        $branch
+#                     );
+# }
 
-Pass the CGI-object C<$query> if you want to use custom input
-values.
+=head2 sendPayment
 
-=cut
-
-sub prepare_payment {
-    my ($class, $payment, $input) = @_;
-    return $class->_get_payment($payment, $input);
-};
-
-=head2 send_payment
-
-  &send_payment($payment);
+  &sendPayment($payment);
 
 Sends the payment using custom interface's implementation.
 
 =cut
 
-sub send_payment {
-    my ($class, $payment) = @_;
+sub sendPayments {
+    my ($self, $transaction_id, $patron_id, $office) = @_;
 
     my $logger = Koha::Logger->get({ category => 'Koha.Payment.POS.CPU.send_payment'});
+
+    my $payment = $self->_get_payment($transaction_id, $patron_id, $office);
 
     my $content = $payment; # content will be JSON string, payment will be HASH
     my $response = eval {
         $content = JSON->new->canonical(1)->encode($payment);
 
-        my $transaction;# = Koha::PaymentsTransactions->find($payment->{Id});
+        my $transactions = $self->transactions->list($payment->{Id});
         return { error => "Error: No transaction found with id ".$payment->{Id}, status => 0 }
-            if not $transaction;
-        return { error => "Error: Transaction ".$payment->{Id}." is not a POS payment", status => 0 }
-            if $transaction->is_self_payment != 0;
-
-        my $server_config = $class->_get_server_config();
+            if not $transactions;
+        
+        $self->transactions->updateStatus({status => "pending", transaction_id => $payment->{Id}});
+        warn Data::Dumper::Dumper $content;
+        return $self->_get_response_int("1");
+        my $server_config = $self->_get_server_config();
         my $ua = LWP::UserAgent->new;
 
         if ($server_config->{'ssl_cert'}) {
@@ -222,32 +160,28 @@ sub send_payment {
         $req->header('content-type' => 'application/json');
 
         $req->content($content);
-        $transaction->set({ status => "pending" })->store();
+        $self->transactions->updateStatus({status => "pending", transaction_id => $payment->{Id}});
         $logger->info("Sent payment: ".Dumper($payment));
         my $request = $ua->request($req);
 
-        $transaction;# = Koha::PaymentsTransactions->find($payment->{Id});
-        my $payment_already_paid = 1 if $transaction->status eq "paid"; # Already paid via REST API!
-        return { status => 1 } if $payment_already_paid;
-
         if ($request->{_rc} != 200) {
             $logger->error('Payment '.$payment->{Id}.' did not return HTTP200 from server, but '.$request->{_rc});
-            $transaction->set({ status => "cancelled", description => $request->{_content} })->store();
+            $self->transactions->cancel({status => "cancelled", description => $request->{_content}, transaction_id => $payment->{Id}});
             return { error => $request->{_content}, status => 0 };
         }
 
         my $response = JSON->new->utf8->canonical(1)->decode($request->{_content});
 
-        if ($response->{Hash} ne $class->_calculate_response_hash($response)) {
+        if ($response->{Hash} ne $self->_calculate_response_hash($response)) {
             $logger->error('Payment '.$payment->{Id}.' responded with invalid hash '.$response->{Hash});
-            $transaction->set({ status => "cancelled", description => "Invalid hash" })->store();
+            $self->transactions->cancel({status => "cancelled", description => "Invalid hash", transaction_id => $payment->{Id}});
             return { error => "Invalid hash", status => 0 };
         }
 
-        my $response_str = $class->_get_response_int($response->{Status});
+        my $response_str = $self->_get_response_int($response->{Status});
         if (defined $response_str->{description}) {
             $logger->error('Payment '.$payment->{Id}.' returned an error: '.$response_str->{description});
-            $transaction->set({ status => "cancelled", description => $response_str->{description} })->store();
+            $self->transactions->cancel({status => "cancelled", description => $response_str->{description}, transaction_id => $payment->{Id}});
             return { error => $response_str->{description}, status => 0 };
         }
 
@@ -257,72 +191,12 @@ sub send_payment {
     if ($@ || $response->{'error'}) {
         my $error = $@ || $response->{'error'};
 
-        my $transaction;# = Koha::PaymentsTransactions->find($payment->{Id});
-        $logger->error("No transaction found with id ".$payment->{Id}) if not $transaction;
-        return JSON->new->utf8->canonical(1)->encode({ error => "Error: Transaction not found " .$payment->{Id}, status => 0 }) if not $transaction;
-        return JSON->new->utf8->canonical(1)->encode({ status => 1 }) if $transaction->status eq "paid"; # Already paid via REST API!
-
         $logger->fatal("Payment ".$payment->{Id}." died with an error: $error");
-        $transaction->set({ status => "cancelled", description => $error })->store();
-        return JSON->new->utf8->canonical(1)->encode({ error => "Error: " . $error, status => 0 });
+        $self->transactions->cancel({status => "cancelled", description => $error, transaction_id => $payment->{Id}});
+        return { error => "Error: " . $error, status => 0 };
     }
 
-    return JSON->new->utf8->canonical(1)->encode($response);
-};
-
-=head2 _account_types_to_itemnumbers
-
-  &_account_types_to_itemnumbers($products, $branch);
-
-Maps Koha-itemtypes (accountlines.accounttype) to CPU itemnumbers.
-
-This is defined in system preference "POSIntegration" for POS integration.
-
-Products is an array of Product (HASH) that are in the format of CPU-document.
-Additionally, a product can have _itemnumber to define product code by item's home branch.
-
-Returns an ARRAY of products (HASH).
-
-=cut
-
-sub _account_types_to_itemnumbers {
-    my ($class, $products, $branch) = @_;
-
-    my ($pref, $config);
-
-    $pref = C4::Context->preference("POSIntegration");
-    Koha::Exception::NoSystemPreference->throw(
-            error => "YAML configuration in system preference "
-                    ."'POSIntegration' is not defined! Cannot assign item numbers for accounttypes.",
-            syspref => "POSIntegration"
-            ) unless $pref;
-
-    $config = YAML::XS::Load(
-                            Encode::encode(
-                                'UTF-8',
-                                $pref,
-                                Encode::FB_CROAK
-                            ));
-    $branch = "Default" unless ($config->{$branch});
-
-    my $modified_products;
-
-    for my $product (@$products){
-        my $mapped_product = $product;
-        # If accounttype is mapped to an item number
-        if ($config->{$branch}->{$product->{Code}}) {
-            $mapped_product->{Code} = $config->{$branch}->{$product->{Code}};
-        } else {
-            # Else, try to use accounttype "Default"
-            Koha::Exception::NoSystemPreference->throw( error => "Could not assign item number to accounttype '".$product->{Code}."'. Configure system preference 'POSIntegration' with parameters 'Default'.", syspref => "POSIntegration" ) unless $config->{$branch}->{'Default'};
-
-            $mapped_product->{Code} = $config->{$branch}->{'Default'};
-        }
-
-        push @$modified_products, $mapped_product;
-    }
-
-    return $modified_products;
+    return $response;
 };
 
 =head2 _calculate_payment_hash
@@ -371,7 +245,7 @@ sub _calculate_response_hash {
     my ($class, $resp) = @_;
     my $data = "";
 
-    my $transaction;# = Koha::PaymentsTransactions->find($resp->{Id});
+    my $transaction = $class->transactions->list($resp->{Id});
     return if not $transaction;
 
     $data .= $resp->{Source} if defined $resp->{Source};
@@ -390,12 +264,7 @@ sub _calculate_response_hash {
 
 =head2 _convert_to_cpu_products
 
-  &_convert_to_cpu_products($products);
-
-Converts Koha::PaymentsTransaction->GetProducts() products into a format defined
-in the CPU documentation.
-
-See also Koha::PaymentsTransaction->GetProducts().
+Converts payment rows to CPU product
 
 =cut
 
@@ -406,9 +275,9 @@ sub _convert_to_cpu_products {
     foreach my $product (@$products){
         my $tmp;
 
-        $tmp->{Price} = $product->{price};
+        $tmp->{Price} = $product->{price_in_cents};
         $tmp->{Description} = $product->{description};
-        $tmp->{Code} = $product->{accounttype};
+        $tmp->{Code} = $product->{payment_type};
 
         push @$CPU_products, $tmp;
     }
@@ -418,43 +287,38 @@ sub _convert_to_cpu_products {
 
 =head2 _get_payment
 
-  &_get_payment($unprepared_payment, $query);
-
 Creates a payment that has a format matching CPU's documentation.
 
 =cut
 
 sub _get_payment {
-    my ($class, $unprepared_payment, $query) = @_;
-
-    my $transaction = $unprepared_payment->{'transaction'};
-
-    my $borrower = Koha::Patrons->cast($transaction->borrowernumber);
+    my ($self, $transaction_id, $patron_id, $office) = @_;
 
     my $payment;
     $payment->{ApiVersion}  = "2.0";
-    $payment->{Source}      = $class->_get_server_config()->{'source'};
-    $payment->{Id}          = $transaction->transaction_id;
+    $payment->{Source}      = $self->_get_server_config()->{'source'};
+    $payment->{Id}          = $transaction_id;
     $payment->{Mode}        = C4::Context->config('pos')->{'CPU'}->{'mode'};
     if (C4::Context->config('pos')->{'CPU'}->{'receiptDescription'} eq 'borrower') {
-        $payment->{Description} = $borrower->surname . ", " .  $borrower->firstname . " (".$borrower->cardnumber.")";
+        my $patron = Koha::Patrons->find($patron_id);
+        $payment->{Description} = $patron->surname . ", " .  $patron->firstname . " (".$patron->cardnumber.")";
     } else {
-        $payment->{Description} = "#" . $transaction->transaction_id;
+        $payment->{Description} = "#" . $transaction_id;
     }
-    $payment->{Products}    = $class->get_prepared_products($transaction->GetProducts(), C4::Context::mybranch());
+    my $transactions = $self->transactions->list($transaction_id);
+    $payment->{Products}    = $self->_convert_to_cpu_products($transactions);
     my $notificationAddress = C4::Context->config('pos')->{'CPU'}->{'notificationAddress'};
-    my $transactionNumber = $transaction->transaction_id;
+    my $transactionNumber = $transaction_id;
     $notificationAddress =~ s/{invoicenumber}/$transactionNumber/g;
     $payment->{NotificationAddress} = $notificationAddress;
 
     # Custom parameters
-    $payment->{Office} = $query->param("Office");
+    $payment->{Office} = $office;
     # / Custom parameters
 
-    $payment = $class->_validate_cpu_hash($payment);
-    $payment->{Hash}        = $class->_calculate_payment_hash($payment);
-    $payment = $class->_validate_cpu_hash($payment);
-    $payment->{"send_payment"} = "POST";
+    $payment = $self->_validate_cpu_hash($payment);
+    $payment->{Hash} = $self->_calculate_payment_hash($payment);
+    $payment = $self->_validate_cpu_hash($payment);
 
     return $payment;
 }
