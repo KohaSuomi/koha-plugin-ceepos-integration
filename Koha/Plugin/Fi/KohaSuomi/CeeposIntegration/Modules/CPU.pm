@@ -48,72 +48,22 @@ sub transactions {
     return Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Transactions->new;
 }
 
-# =head2 add_custom_parameters
+=head2 is_valid_hash
 
-#   &add_custom_parameters($payment, $query);
+  &is_valid_hash($query);
 
-# Adds custom parameters from $query into $payment.
+Checks the C<$query> to determine whether Patron has
+returned into the return address from online store.
 
-# Returns modified $payment where custom parameters from $query have been added.
+Return true if yes.
 
-# =cut
+=cut
 
-# sub add_custom_parameters {
-#     my ($class, $payment, $query) = @_;
+sub is_valid_hash {
+    my ($class, $query) = @_;
 
-#     $payment->{'Office'} = $query->param("office");
-
-#     return $payment;
-# };
-
-# =head2 complete_payment
-
-#   &complete_payment($args);
-
-# Completes the payment in REST API.
-
-# =cut
-
-# sub complete_payment {
-#     my ($class, $args) = @_;
-
-#     my $transaction = $self->transactions->find($args->{Id});
-#     return if not $transaction or $transaction->is_self_payment == 1;
-#     $transaction->CompletePayment($class->_get_response_string($args->{Status})->{status});
-# };
-
-# =head2 get_custom_parameters
-
-#   &get_custom_parameters($payment);
-
-# Gets custom parameters in order to display custom parameters in paycollect.tt.
-# This subroutine is given a prepared $payment in paycollect.pl.
-
-# =cut
-
-# sub get_custom_parameters {
-#     my ($class, $args) = @_;
-
-#     return { Office => $args->{'Office'} };
-# };
-
-# =head2 get_prepared_products
-
-#   &get_prepared_products($products, $branch);
-
-# Converts C<$products> from Koha::PaymentsTransaction->GetProducts() into a format
-# that matches CPU documentation, and converts Koha accounttypes from accountlines
-# into product codes recognized by CPU payment server.
-
-# =cut
-
-# sub get_prepared_products {
-#     my ($class, $products, $branch) = @_;
-#     return $class->_account_types_to_itemnumbers(
-#                        $class->_convert_to_cpu_products($products),
-#                        $branch
-#                     );
-# }
+    return $query->{'Hash'} eq $class->_calculate_response_hash($query);
+};
 
 =head2 sendPayment
 
@@ -137,10 +87,7 @@ sub sendPayments {
         my $transactions = $self->transactions->list($payment->{Id});
         return { error => "Error: No transaction found with id ".$payment->{Id}, status => 0 }
             if not $transactions;
-        
-        $self->transactions->updateStatus({status => "pending", transaction_id => $payment->{Id}});
-        warn Data::Dumper::Dumper $content;
-        return $self->_get_response_int("1");
+
         my $server_config = $self->_get_server_config();
         my $ua = LWP::UserAgent->new;
 
@@ -257,7 +204,6 @@ sub _calculate_response_hash {
     $data .= "&" . $class->_get_server_config()->{'secretKey'};
 
     $data =~ s/^&//g;
-
     $data = Digest::SHA::sha256_hex($data);
     return $data;
 };

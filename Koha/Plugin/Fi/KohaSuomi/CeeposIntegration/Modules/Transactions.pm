@@ -46,8 +46,8 @@ sub db {
 }
 
 sub cpu {
-    my ($self) = @_;
-    return Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::CPU->new;
+    my ($self, $branch) = @_;
+    return Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::CPU->new({branch => $branch});
 }
 
 sub plugin {
@@ -157,7 +157,7 @@ sub setPayments {
         }
     }
 
-    my $response = $self->cpu->sendPayments($cpuid, $patron_id, $office);
+    my $response = $self->cpu($self->librarycode)->sendPayments($cpuid, $patron_id, $office);
     if ($response->{error}) {
         Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw($response->{error});
     }
@@ -173,35 +173,34 @@ sub completePayment {
 
     my $logger = Koha::Logger->get({ interface => 'intranet' });
 
-    unless ($self->cpu->_calculate_response_hash($params)) {
+    my $transactions = $self->list($params->{Id});
+    my $branch = @$transactions[0]->{branch};
+    
+    unless (defined $transactions) {
+        $logger->warn("Transaction not found ". $params->{Id});
+        Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::NotFound->throw("Transaction not found");
+    }
+
+    unless ($self->cpu($branch)->is_valid_hash($params)) {
         $logger->warn("Invalid hash for transaction ".$params->{Id});
         Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw("Invalid hash for transaction ". $params->{Id});
     }
 
-    my $status = $self->cpu->_get_response_string($params->{Status})->{status};
+    my $status = $self->cpu($branch)->_get_response_string($params->{Status})->{status};
 
     if ($status ne "paid" and $status ne "cancelled") {
         $logger->warn("Invalid status $status. Call subroutine with 'cancelled' or 'paid' status");
         return;
     }
 
-    my $transactions = $self->list($params->{Id});
-
-    unless (defined $transactions) {
-        $logger->warn("Transaction not found ". $params->{Id});
-        Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::NotFound->throw("Transaction not found");
-    }
-
     my $office;
     my $patron_id;
     my $accountline_ids;
     my $total = 0;
-    my $branch;
     foreach my $transaction (@$transactions) {
 
         my $old_status = $transaction->{status};
         my $new_status = $status;
-        warn Data::Dumper::Dumper $old_status, $new_status;
 
         if ($old_status eq $new_status){
             # Trying to complete with same status, makes no sense
