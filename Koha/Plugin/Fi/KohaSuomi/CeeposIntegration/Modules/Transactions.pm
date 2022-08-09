@@ -135,6 +135,7 @@ sub setPayments {
         $payment->{transaction_id} = $cpuid;
         $patron_id = $payment->{borrowernumber};
         $total += $payment->{amountoutstanding};
+        $office = $payment->{office};
         if ($payment->{accountlines}) {
             my @lines = split(',', $payment->{accountlines});
             foreach my $accountline_id (@lines) {
