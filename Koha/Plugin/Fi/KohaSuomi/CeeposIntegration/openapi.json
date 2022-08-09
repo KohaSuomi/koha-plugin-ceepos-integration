@@ -62,7 +62,7 @@
       }
     }
   },
-  "/payments/ceepos/{invoicenumber}/report": {
+  "/payments/ceepos/report": {
     "post": {
       "x-mojo-to": "Fi::KohaSuomi::CeeposIntegration::Controllers::TransactionController#report",
       "operationId": "cpuPosReport",
@@ -70,13 +70,6 @@
         "POS Integration"
       ],
       "parameters": [
-        {
-          "name": "invoicenumber",
-          "in": "path",
-          "description": "Internal invoice identifier",
-          "required": true,
-          "type": "string"
-        },
         {
           "name": "body",
           "in": "body",

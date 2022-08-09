@@ -53,7 +53,6 @@ sub report {
     my $c = shift->openapi->valid_input or return;
 
     return try {
-        my $invoicenumber = $c->validation->param('invoicenumber');;
         my $params = $c->req->json;
 
         my $logger = Koha::Logger->get();
