@@ -74,7 +74,7 @@ Once set up is complete you will need to alter your UseKohaPlugins system prefer
 </pos>
 
 ```
-2. Define offices to PAYMENT_TYPE authorized values. If ILS has more Ceepos sources then name the payment type as source+office, like KOHA10.
+2. Define offices to PAYMENT_TYPE authorized value. If ILS has more Ceepos sources then name the payment type as source+office, like KOHA10.
 3. Add this to intranetuserjs
 
 ```
