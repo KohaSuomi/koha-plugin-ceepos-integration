@@ -177,7 +177,7 @@ sub setPayments {
 sub completePayment {
     my ($self, $params) = @_;
 
-    my $logger = Koha::Logger->get({ interface => 'intranet' });
+    my $logger = Koha::Logger->get({ interface => 'ceepos' });
 
     my $transactions = $self->list($params->{Id});
     my $branch = @$transactions[0]->{branch};

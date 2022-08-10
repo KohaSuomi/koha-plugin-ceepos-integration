@@ -119,3 +119,18 @@ function setCeeposPayment(element) {
    });
 }
 ```
+
+# Logging
+
+Set logging for ceepos to log4perl.conf file
+
+```
+log4perl.logger.ceepos = INFO, CEEPOS
+log4perl.appender.CEEPOS=Log::Log4perl::Appender::File
+log4perl.appender.CEEPOS.filename=/var/log/koha/ceepos.log
+log4perl.appender.CEEPOS.mode=append
+log4perl.appender.CEEPOS.layout=PatternLayout
+log4perl.appender.CEEPOS.layout.ConversionPattern=[%d] [%p] %m
+log4perl.appender.CEEPOS.utf8=1
+
+```

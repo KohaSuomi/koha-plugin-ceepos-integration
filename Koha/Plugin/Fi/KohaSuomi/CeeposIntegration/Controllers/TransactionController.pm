@@ -26,7 +26,7 @@ use Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Transactions;
 sub pay {
     my $c = shift->openapi->valid_input or return;
     
-    my $logger = Koha::Logger->get();
+    my $logger = Koha::Logger->get({ interface => 'ceepos'});
     return try {
         my $params = $c->req->json;
         $logger->info("Payments received: ".Dumper($params));
@@ -43,7 +43,7 @@ sub pay {
             return $c->render( status  => 400,
                             openapi => { error => $error->message});
         }
-        warn Dumper $error;
+        $logger->error($error);
         return $c->render( status  => 500,
                             openapi => { error => "Something went wrong, check the logs!"});
     };
@@ -52,10 +52,10 @@ sub pay {
 sub report {
     my $c = shift->openapi->valid_input or return;
 
+    my $logger = Koha::Logger->get({ interface => "ceepos" });
     return try {
         my $params = $c->req->json;
 
-        my $logger = Koha::Logger->get();
         $logger->info("Report received: ".Dumper($params));
 
         my $transaction = Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Transactions->new();
@@ -74,7 +74,7 @@ sub report {
             return $c->render( status  => 404,
                             openapi => { error => $error->message});
         }
-        warn Dumper $error;
+        $logger->error($error);
         return $c->render( status  => 500,
                             openapi => { error => "Something went wrong, check the logs!"});
     };

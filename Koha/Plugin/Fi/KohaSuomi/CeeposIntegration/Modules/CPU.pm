@@ -76,7 +76,7 @@ Sends the payment using custom interface's implementation.
 sub sendPayments {
     my ($self, $transaction_id, $patron_id, $office) = @_;
 
-    my $logger = Koha::Logger->get({ category => 'Koha.Payment.POS.CPU.send_payment'});
+    my $logger = Koha::Logger->get({ interface => 'ceepos'});
 
     my $payment = $self->_get_payment($transaction_id, $patron_id, $office);
 
