@@ -75,7 +75,13 @@ Once set up is complete you will need to alter your UseKohaPlugins system prefer
 
 ```
 2. Define offices to PAYMENT_TYPE authorized value. If ILS has more Ceepos sources then name the payment type as source+office, like KOHA10.
-3. Add this to intranetuserjs
+3. Define Koha-Ceepos product mapping yaml to plugin's settings. Add library code and into it Koha product name and Ceepos product name.
+```
+CPL:
+ MANUAL: 1111
+ NEW_CARD: 3222
+```
+4. Add this to intranetuserjs
 
 ```
 $(document).ready(function() {
