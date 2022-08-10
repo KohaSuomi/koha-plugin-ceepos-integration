@@ -76,7 +76,7 @@ Once set up is complete you will need to alter your UseKohaPlugins system prefer
 
 ```
 
-3. Add this to intranetusejs
+3. Add this to intranetuserjs
 
 ```
 $(document).ready(function() {
