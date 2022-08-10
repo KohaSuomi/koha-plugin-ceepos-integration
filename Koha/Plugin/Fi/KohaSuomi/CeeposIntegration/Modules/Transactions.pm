@@ -30,6 +30,7 @@ use C4::Context;
 use Encode;
 use Koha::Account::Lines;
 use Data::Dumper;
+use C4::Log;
 
 sub new {
     my ($class, $params) = @_;
@@ -124,9 +125,9 @@ sub setPayments {
     my $accountline_ids;
     my $total = 0;
     foreach my $payment (@$payments) {
-        # if (_convert_to_cents($payment->{amountoutstanding}) == 0) {
-        #     next;
-        # }
+        if ($self->_convert_to_cents($payment->{amountoutstanding}) == 0) {
+            next;
+        }
         unless ($payment->{office}) {
             Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw('Office is missing!');
         }
@@ -135,6 +136,8 @@ sub setPayments {
         $payment->{transaction_id} = $cpuid;
         $patron_id = $payment->{borrowernumber};
         $total += $payment->{amountoutstanding};
+        my $source = $self->cpu($payment->{branch})->_get_server_config()->{source};
+        $payment->{office} =~ s/$source//;
         $office = $payment->{office};
         if ($payment->{accountlines}) {
             my @lines = split(',', $payment->{accountlines});
@@ -157,15 +160,17 @@ sub setPayments {
             push @$accountline_ids, $payment->{accountlines_id};
         }
     }
+    
+    if ($accountline_ids) {
+        my $response = $self->cpu($self->librarycode)->sendPayments($cpuid, $patron_id, $office);
+        if ($response->{error}) {
+            Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw($response->{error});
+        }
 
-    my $response = $self->cpu($self->librarycode)->sendPayments($cpuid, $patron_id, $office);
-    if ($response->{error}) {
-        Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw($response->{error});
-    }
-
-    foreach my $accountline_id (@$accountline_ids) {
-        my $accountline = Koha::Account::Lines->find($accountline_id);
-        $accountline->set({note => $cpuid})->store();
+        foreach my $accountline_id (@$accountline_ids) {
+            my $accountline = Koha::Account::Lines->find($accountline_id);
+            $accountline->set({note => $cpuid})->store();
+        }
     }
 }
 
@@ -220,14 +225,7 @@ sub completePayment {
         #return if defined $transaction->accountlines_id;
         # Reverse the payment if old status is different than new status (and either paid or cancelled)
         if (defined $transaction->{accountlines_id} && (($old_status eq "paid" and $new_status eq "cancelled") or ($old_status eq "cancelled" and $new_status eq "paid"))){
-            my $payment    = Koha::Account::Lines->find( $transaction->{accountlines_id} );
-            $payment->void(
-                {
-                    branch    => $transaction->{branch},
-                    staff_id  => $transaction->{manager_id},
-                    interface => 'intranet',
-                }
-            );
+            $self->reversePayment($transaction->{accountlines_id});
             $self->void({ status => $status, description => $transaction->{description} . "\n\nPayment was reverted after it has already been paid", payment_id => $transaction->{payment_id}});
             next;
         }
@@ -287,6 +285,47 @@ sub payAccountlines {
             note         => $note
         }
     );
+}
+
+sub reversePayment {
+    my ( $self, $accountlines_id ) = @_;
+    my $dbh = C4::Context->dbh;
+
+    my $sth = $dbh->prepare('SELECT * FROM accountlines WHERE accountlines_id = ?');
+    $sth->execute( $accountlines_id );
+    my $row = $sth->fetchrow_hashref();
+    my $amount_outstanding = $row->{'amountoutstanding'};
+
+    if ( $amount_outstanding <= 0 ) {
+        $sth = $dbh->prepare('UPDATE accountlines SET amountoutstanding = amount * -1, description = CONCAT( description, " Reversed -" ) WHERE accountlines_id = ?');
+        $sth->execute( $accountlines_id );
+    } else {
+        $sth = $dbh->prepare('UPDATE accountlines SET amountoutstanding = 0, description = CONCAT( description, " Reversed -" ) WHERE accountlines_id = ?');
+        $sth->execute( $accountlines_id );
+    }
+
+    if ( C4::Context->preference("FinesLog") ) {
+        my $manager_id = 0;
+        $manager_id = C4::Context->userenv->{'number'} if C4::Context->userenv;
+
+        if ( $amount_outstanding <= 0 ) {
+            $row->{'amountoutstanding'} *= -1;
+        } else {
+            $row->{'amountoutstanding'} = '0';
+        }
+        $row->{'description'} .= ' Reversed -';
+        C4::Log::logaction("FINES", 'MODIFY', $row->{'borrowernumber'}, Dumper({
+            action                => 'reverse_fee_payment',
+            borrowernumber        => $row->{'borrowernumber'},
+            old_amountoutstanding => $row->{'amountoutstanding'},
+            new_amountoutstanding => 0 - $amount_outstanding,,
+            accountlines_id       => $row->{'accountlines_id'},
+            accountno             => $row->{'accountno'},
+            manager_id            => $manager_id,
+        }));
+
+    }
+
 }
 
 sub _random_string {
