@@ -94,7 +94,7 @@ function setCeeposPayment(element) {
   	let borrowernumber;
     if($("#payindivfine").find("#pay_individual").val() == 1) {
        borrowernumber = $("#payindivfine").find("#borrowernumber").val();
-       payments = [{'borrowernumber': $("#payindivfine").find("#borrowernumber").val(), 'accountlines_id': 		$("#payindivfine").find("#accountlines_id").val(), 'description': $("#payindivfine").find("#description").val(), 'amountoutstanding': $("#payindivfine").find("#collected").val(), 'payment_type': $("#payindivfine").find("#debit_type_code").val(), 'office': ceeposOffice}];
+       payments = [{'borrowernumber': $("#payindivfine").find("#borrowernumber").val(), 'accountlines_id': $("#payindivfine").find("#accountlines_id").val(), 'description': $("#payindivfine").find("#description").val(), 'amountoutstanding': $("#payindivfine").find("#collected").val(), 'payment_type': $("#payindivfine").find("#debit_type_code").val(), 'office': ceeposOffice}];
     } else {
         borrowernumber = $("#payfine").find("#borrowernumber").val();
         payments = [{'borrowernumber': $("#payfine").find("#borrowernumber").val(), 'accountlines': $("#payfine").find("#selected_accts").val(), 'amountoutstanding': $("#payfine").find("#collected").val(), 'office': ceeposOffice}];
