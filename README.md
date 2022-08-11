@@ -85,7 +85,7 @@ CPL:
 
 ```
 $(document).ready(function() {
-  $("#payfine .action, #payindivfine .action").find("input").after('<input type="button" style="margin-left:3px;" value="Ceeposmaksu" onclick="setCeeposPayment($(this))"/>');
+  $("#payfine .action, #payindivfine .action").find("input").after('<input type="button" id="CeeposMaksu" style="margin-left:3px;" value="Ceeposmaksu" onclick="setCeeposPayment($(this))"/>');
   if(localStorage.getItem('ceeposOffice')){
     $('#payment_type').val(localStorage.getItem('ceeposOffice'));
   }
@@ -110,10 +110,15 @@ function setCeeposPayment(element) {
      dataType: "json",
      contentType: "application/json; charset=utf-8",
      data: JSON.stringify(payments),
+     beforeSend: function() {
+        $("#CeeposMaksu").attr("disabled", true);
+        alert("Maksu lähetetty, käsittele kassassa");
+     },
      success: function (result) {
          location.href = '/cgi-bin/koha/members/boraccount.pl?borrowernumber='+borrowernumber;
       },
       error: function (xhr, status, error) {
+          $("#CeeposMaksu").attr("disabled", false);
           alert(JSON.parse(xhr.responseText).error);
       }
    });
