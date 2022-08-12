@@ -66,8 +66,8 @@ Once set up is complete you will need to alter your UseKohaPlugins system prefer
 
         <!-- Koha settings -->
         <mode></mode>                               <!-- Use 2 for synchronized mode -->
-        <notificationAddress></notificationAddress> <!-- https://server/api/v1/payments/pos/cpu/{invoicenumber}/report -->
-        <!-- Replace "server" with your server address, but keep {invoicenumber} as it is (it will be converted later into real id) -->
+        <notificationAddress></notificationAddress> <!-- https://server/api/v1/contrib/kohasuomi/payments/ceepos/report -->
+        <!-- Replace "server" with your server address -->
         <!-- Use "borrower" for borrower information. Any other value will default to transaction id -->
         <receiptDescription>id</receiptDescription>
     </CPU>
