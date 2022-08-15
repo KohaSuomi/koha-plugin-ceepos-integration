@@ -85,9 +85,12 @@ CPL:
 
 ```
 $(document).ready(function() {
-  $("#payfine .action, #payindivfine .action").find("input").after('<input type="button" id="CeeposMaksu" style="margin-left:3px;" value="Ceeposmaksu" onclick="setCeeposPayment($(this))"/>');
-  if(localStorage.getItem('ceeposOffice')){
+  let ceeposBranches = ['CPL']; // Define the button visibility by library
+  if (ceeposBranches.includes($("#logged-in-info-full .logged-in-branch-code").text())) {
+   $("#payfine .action, #payindivfine .action").find("input").after('<input type="button" id="CeeposMaksu" style="margin-left:3px;" value="Ceeposmaksu" onclick="setCeeposPayment($(this))"/>');
+   if(localStorage.getItem('ceeposOffice')){
     $('#payment_type').val(localStorage.getItem('ceeposOffice'));
+   }
   }
   $('#paycollect').hide();
 });
