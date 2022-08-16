@@ -176,7 +176,6 @@ sub _calculate_payment_hash {
     }
 
     $data .= $class->_get_server_config()->{'secretKey'};
-    $data = Encode::encode_utf8($data);
     return Digest::SHA::sha256_hex($data);
 };
 
