@@ -18,7 +18,7 @@ package Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::CPU;
 # along with Koha; if not, see <http://www.gnu.org/licenses>.
 
 use C4::Context;
-
+use utf8;
 use Data::Dumper qw(Dumper);
 use Digest::SHA qw(sha256_hex);
 use Encode;
@@ -261,11 +261,13 @@ sub _get_payment {
     # Custom parameters
     $payment->{Office} = $office;
     # / Custom parameters
-
+    
     $payment = $self->_validate_cpu_hash($payment);
     $payment->{Hash} = $self->_calculate_payment_hash($payment);
     $payment = $self->_validate_cpu_hash($payment);
 
+    $logger->info("Payment Hash: ".$payment->{Hash});
+    
     return $payment;
 }
 
