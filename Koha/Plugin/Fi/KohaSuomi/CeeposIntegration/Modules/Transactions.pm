@@ -136,8 +136,6 @@ sub setPayments {
         $payment->{transaction_id} = $cpuid;
         $patron_id = $payment->{borrowernumber};
         $total += $payment->{amountoutstanding};
-        my $source = $self->cpu($payment->{branch})->_get_server_config()->{source};
-        $payment->{office} =~ s/$source//;
         $office = $payment->{office};
         if ($payment->{accountlines}) {
             my @lines = split(',', $payment->{accountlines});
@@ -162,6 +160,8 @@ sub setPayments {
     }
     
     if ($accountline_ids) {
+        my $source = $self->cpu($self->librarycode)->_get_server_config()->{source};
+        $office =~ s/$source//;
         my $response = $self->cpu($self->librarycode)->sendPayments($cpuid, $patron_id, $office);
         if ($response->{error}) {
             Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw($response->{error});
