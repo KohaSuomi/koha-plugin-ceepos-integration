@@ -265,8 +265,6 @@ sub _get_payment {
     $payment = $self->_validate_cpu_hash($payment);
     $payment->{Hash} = $self->_calculate_payment_hash($payment);
     $payment = $self->_validate_cpu_hash($payment);
-
-    $logger->info("Payment Hash: ".$payment->{Hash});
     
     return $payment;
 }
