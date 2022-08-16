@@ -221,7 +221,7 @@ sub _convert_to_cpu_products {
         my $tmp;
 
         $tmp->{Price} = $product->{price_in_cents};
-        $tmp->{Description} = $product->{description};
+        $tmp->{Description} = Encode::encode_utf8($product->{description});
         $tmp->{Code} = $product->{payment_type};
 
         push @$CPU_products, $tmp;
