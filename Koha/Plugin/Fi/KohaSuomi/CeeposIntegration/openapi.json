@@ -5,7 +5,7 @@
       "operationId": "payCPU",
       "x-koha-authorization": {
         "permissions": {
-          "updatecharges": "1"
+          "updatecharges": "remaining_permissions"
         }
       },
       "parameters": [
