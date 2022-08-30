@@ -80,6 +80,7 @@ Once set up is complete you will need to alter your UseKohaPlugins system prefer
 CPL:
  MANUAL: 1111
  NEW_CARD: 3222
+ "Copies and prints": 5555
 ```
 4. Add this to intranetuserjs
 
@@ -93,6 +94,8 @@ $(document).ready(function() {
    }
   }
   $('#paycollect').hide();
+  $("#circmessages a[href*='/cgi-bin/koha/members/paycollect.pl'").hide();
+  $("#patron_messages a[href*='/cgi-bin/koha/members/paycollect.pl'").hide();
 });
 
 function setCeeposPayment(element) {
