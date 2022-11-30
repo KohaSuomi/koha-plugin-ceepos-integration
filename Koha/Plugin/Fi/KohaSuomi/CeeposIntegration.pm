@@ -122,7 +122,7 @@ sub table {
         CREATE TABLE ".$transactions." (
             payment_id int(11) NOT NULL auto_increment,
             transaction_id varchar(150) NOT NULL,
-            borrowernumber int(11) NOT NULL,
+            borrowernumber int(11) DEFAULT NULL,
             accountlines_id int(11) NOT NULL,
             status ENUM('paid','pending','cancelled','unsent','processing') DEFAULT 'unsent',
             timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -136,7 +136,7 @@ sub table {
             FOREIGN KEY (accountlines_id)
                 REFERENCES accountlines(accountlines_id),
             FOREIGN KEY (borrowernumber)
-                REFERENCES borrowers(borrowernumber)
+                REFERENCES borrowers(borrowernumber) ON DELETE SET NULL ON UPDATE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ");
 }
