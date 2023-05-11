@@ -22,9 +22,12 @@ use Mojolicious::Lite;
 use JSON;
 use Data::Dumper;
 
-use Koha::PaymentsTransactions;
+# use PaymentsTransactions;
 
 use C4::Context;
+
+use FindBin;
+use lib $FindBin::Bin;
 
 my $mode = 'online_payments';
 
