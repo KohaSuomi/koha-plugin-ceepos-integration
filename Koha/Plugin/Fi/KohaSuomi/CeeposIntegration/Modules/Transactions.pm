@@ -272,7 +272,7 @@ sub payAccountlines {
     @selected_accountlines = Koha::Account::Lines->search(
         $search_params,
         { order_by => 'date' }
-    );
+    )->as_list;
 
     my $pay_result = $account->pay(
         {
