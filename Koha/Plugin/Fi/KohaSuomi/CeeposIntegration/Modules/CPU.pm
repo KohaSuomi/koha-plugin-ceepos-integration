@@ -31,9 +31,15 @@ use YAML::XS;
 use Koha::Patron;
 use Koha::Patrons;
 use Koha::Items;
-use Koha::Logger;
 
 use Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Transactions;
+
+use Log::Log4perl;
+use File::Basename;
+
+my $CONFPATH = dirname($ENV{'KOHA_CONF'});
+my $log_conf = $CONFPATH . "/log4perl.conf";
+Log::Log4perl::init($log_conf);
 
 sub new {
     my ($class, $self) = @_;
@@ -76,7 +82,7 @@ Sends the payment using custom interface's implementation.
 sub sendPayments {
     my ($self, $transaction_id, $patron_id, $office) = @_;
 
-    my $logger = Koha::Logger->get({ interface => 'ceepos'});
+    my $logger = Log::Log4perl->get_logger('ceepos');
 
     my $payment = $self->_get_payment($transaction_id, $patron_id, $office);
 
