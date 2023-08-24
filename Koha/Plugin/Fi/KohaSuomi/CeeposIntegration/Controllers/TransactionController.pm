@@ -19,7 +19,7 @@ use Modern::Perl;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Try::Tiny;
-use Koha::Logger;
+
 use Data::Dumper;
 use Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Transactions;
 
@@ -29,8 +29,6 @@ use File::Basename;
 my $CONFPATH = dirname($ENV{'KOHA_CONF'});
 my $log_conf = $CONFPATH . "/log4perl.conf";
 Log::Log4perl::init($log_conf);
-
-my $logger = Log::Log4perl->get_logger('ceepos');
 
 sub pay {
     my $c = shift->openapi->valid_input or return;

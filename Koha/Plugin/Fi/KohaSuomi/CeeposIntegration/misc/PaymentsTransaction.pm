@@ -34,6 +34,13 @@ use Koha::Patron::Debarments;
 use Koha::Database;
 use Koha::Exception::BadParameter;
 
+use Log::Log4perl;
+use File::Basename;
+
+my $CONFPATH = dirname($ENV{'KOHA_CONF'});
+my $log_conf = $CONFPATH . "/log4perl.conf";
+Log::Log4perl::init($log_conf);
+
 sub _type {
     return 'PaymentsTransaction';
 }
@@ -182,7 +189,7 @@ sub CompletePayment {
     my $transaction = $self;
     return if not $transaction;
 
-    my $logger = Koha::Logger->get({ interface => 'intranet' });
+    my $logger = Log::Log4perl->get_logger('ceepos');
 
     if ($status ne "paid" and $status ne "cancelled") {
         warn "Invalid status $status. Call subroutine with 'cancelled' or 'paid' status";
