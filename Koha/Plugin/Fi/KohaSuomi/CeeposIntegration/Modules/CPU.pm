@@ -360,6 +360,13 @@ sub _validate_cpu_hash {
             $product->{$product_field} =~ s/'//g if defined $invoice->{$product_field}; # Remove '
             $product->{$product_field} =~ s/^\s+|\s+$//g if defined $invoice->{$product_field}; # Trim both ends
             $product->{$product_field} = substr($product->{$product_field}, 0, 99);
+
+            # Trim description to the last space if it's 99 characters long
+            if($product_field eq "Description" && length($product->{$product_field}) == 99){
+                my ($description) = split(/([^ ]+)$/, $product->{$product_field}, 2);
+                $product->{$product_field} = $description;
+            }
+
             $product->{$product_field} =~ s/^\s+|\s+$//g if defined $invoice->{$product_field}; # Trim again
         }
         $product->{Description} = "-" if $product->{'Description'} eq "";
