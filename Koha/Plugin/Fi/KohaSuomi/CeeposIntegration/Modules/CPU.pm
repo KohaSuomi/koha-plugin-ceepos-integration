@@ -97,11 +97,9 @@ sub sendPayments {
         my $server_config = $self->_get_server_config();
         my $ua = LWP::UserAgent->new;
 
-        if ($server_config->{'ssl_cert'}) {
+        if ($server_config->{'ssl_ca_file'}) {
             $ua->ssl_opts(
                 SSL_use_cert    => 1,
-                SSL_cert_file   => $server_config->{'ssl_cert'},
-                SSL_key_file    => $server_config->{'ssl_key'},
                 SSL_ca_file     => $server_config->{'ssl_ca_file'},
                 verify_hostname => 1,
             );
