@@ -1,4 +1,4 @@
-package Koha::PaymentsTransactions;
+package Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::misc::PaymentsTransactions;
 
 # Copyright 2016 KohaSuomi
 #
@@ -19,7 +19,7 @@ package Koha::PaymentsTransactions;
 
 use Modern::Perl;
 use Koha::Database;
-use Koha::PaymentsTransaction;
+use Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::misc::PaymentsTransaction;
 use base qw(Koha::Objects);
 
 sub _type {

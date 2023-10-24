@@ -1,4 +1,4 @@
-package Koha::PaymentsTransaction;
+package Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::misc::PaymentsTransaction;
 
 # Copyright 2016 KohaSuomi
 #
@@ -32,7 +32,7 @@ use Koha::Account;
 
 use Koha::Patron::Debarments;
 use Koha::Database;
-use Koha::Exception::BadParameter;
+use Koha::Exceptions::BadParameter;
 
 use Log::Log4perl;
 use File::Basename;
