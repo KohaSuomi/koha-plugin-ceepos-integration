@@ -14,9 +14,9 @@ The plugin system needs to be turned on by a system administrator.
 
 To set up the Koha plugin system you must first make some changes to your install.
 
-    Change <enable_plugins>0<enable_plugins> to <enable_plugins>1</enable_plugins> in your koha-conf.xml file
-    Confirm that the path to <pluginsdir> exists, is correct, and is writable by the web server
-    Remember to allow access to plugin directory from Apache
+Change ```<enable_plugins>0<enable_plugins> ``` to ``` <enable_plugins>1</enable_plugins> ``` in your koha-conf.xml file
+Confirm that the path to <pluginsdir> exists, is correct, and is writable by the web server
+Remember to allow access to plugin directory from Apache
 
     <Directory <pluginsdir>>
         Options Indexes FollowSymLinks
@@ -24,7 +24,7 @@ To set up the Koha plugin system you must first make some changes to your instal
         Require all granted
     </Directory>
 
-    Restart your webserver
+Restart your webserver
 
 Once set up is complete you will need to alter your UseKohaPlugins system preference. On the Tools page you will see the Tools Plugins and on the Reports page you will see the Reports Plugins.
 
@@ -32,7 +32,7 @@ Once set up is complete you will need to alter your UseKohaPlugins system prefer
 
 1. Define your connection configurations to koha-conf.xml
 
-```
+```xml
 <pos>
     <CPU>
         <!-- Default payment server configuration -->
@@ -40,9 +40,7 @@ Once set up is complete you will need to alter your UseKohaPlugins system prefer
         <source></source>                           <!-- Source id -->
         <secretKey></secretKey>                     <!-- Secret key for generating SHA-256 hash -->
         <url></url>                                 <!-- Address to the cash register server -->
-        <!-- SSL certificates -->
-        <ssl_cert></ssl_cert>                       <!-- SSL certificate path -->
-        <ssl_key></ssl_key>                         <!-- SSL key path -->
+        <!-- SSL CA certificate, this is mandatory -->
         <ssl_ca_file></ssl_ca_file>                 <!-- CA certificate path -->
 
         <!-- Per branch payment server configuration -->
@@ -76,15 +74,15 @@ Once set up is complete you will need to alter your UseKohaPlugins system prefer
 ```
 2. Define offices to PAYMENT_TYPE authorized value. If ILS has more Ceepos sources then name the payment type as source+office, like KOHA10.
 3. Define Koha-Ceepos product mapping yaml to plugin's settings. Add library code and into it Koha product name and Ceepos product name.
-```
+```yaml
 CPL:
  MANUAL: 1111
  NEW_CARD: 3222
  "Copies and prints": 5555
 ```
-4. Add this to intranetuserjs
+4. Add this to the intranetuserjs
 
-```
+```javascript
 $(document).ready(function() {
   let ceeposBranches = ['CPL']; // Define the button visibility by library
   if (ceeposBranches.includes($("#logged-in-info-full .logged-in-branch-code").text())) {
