@@ -32,6 +32,13 @@ use Koha::Account::Lines;
 use Data::Dumper;
 use C4::Log;
 
+use Log::Log4perl;
+use File::Basename;
+
+my $CONFPATH = dirname($ENV{'KOHA_CONF'});
+my $log_conf = $CONFPATH . "/log4perl.conf";
+Log::Log4perl::init($log_conf);
+
 sub new {
     my ($class, $params) = @_;
     my $self = {};
@@ -177,7 +184,7 @@ sub setPayments {
 sub completePayment {
     my ($self, $params) = @_;
 
-    my $logger = Koha::Logger->get({ interface => 'ceepos' });
+    my $logger = Log::Log4perl->get_logger('ceepos');
 
     my $transactions = $self->list($params->{Id});
     my $branch = @$transactions[0]->{branch};
@@ -272,7 +279,7 @@ sub payAccountlines {
     @selected_accountlines = Koha::Account::Lines->search(
         $search_params,
         { order_by => 'date' }
-    );
+    )->as_list;
 
     my $pay_result = $account->pay(
         {

@@ -31,9 +31,15 @@ use YAML::XS;
 use Koha::Patron;
 use Koha::Patrons;
 use Koha::Items;
-use Koha::Logger;
 
 use Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Transactions;
+
+use Log::Log4perl;
+use File::Basename;
+
+my $CONFPATH = dirname($ENV{'KOHA_CONF'});
+my $log_conf = $CONFPATH . "/log4perl.conf";
+Log::Log4perl::init($log_conf);
 
 sub new {
     my ($class, $self) = @_;
@@ -76,7 +82,7 @@ Sends the payment using custom interface's implementation.
 sub sendPayments {
     my ($self, $transaction_id, $patron_id, $office) = @_;
 
-    my $logger = Koha::Logger->get({ interface => 'ceepos'});
+    my $logger = Log::Log4perl->get_logger('ceepos');
 
     my $payment = $self->_get_payment($transaction_id, $patron_id, $office);
 
@@ -91,11 +97,9 @@ sub sendPayments {
         my $server_config = $self->_get_server_config();
         my $ua = LWP::UserAgent->new;
 
-        if ($server_config->{'ssl_cert'}) {
+        if ($server_config->{'ssl_ca_file'}) {
             $ua->ssl_opts(
                 SSL_use_cert    => 1,
-                SSL_cert_file   => $server_config->{'ssl_cert'},
-                SSL_key_file    => $server_config->{'ssl_key'},
                 SSL_ca_file     => $server_config->{'ssl_ca_file'},
                 verify_hostname => 1,
             );
@@ -354,6 +358,13 @@ sub _validate_cpu_hash {
             $product->{$product_field} =~ s/'//g if defined $invoice->{$product_field}; # Remove '
             $product->{$product_field} =~ s/^\s+|\s+$//g if defined $invoice->{$product_field}; # Trim both ends
             $product->{$product_field} = substr($product->{$product_field}, 0, 99);
+
+            # Trim description to the last space if it's 99 characters long
+            if($product_field eq "Description" && length($product->{$product_field}) == 99){
+                my ($description) = split(/([^ ]+)$/, $product->{$product_field}, 2);
+                $product->{$product_field} = $description;
+            }
+
             $product->{$product_field} =~ s/^\s+|\s+$//g if defined $invoice->{$product_field}; # Trim again
         }
         $product->{Description} = "-" if $product->{'Description'} eq "";

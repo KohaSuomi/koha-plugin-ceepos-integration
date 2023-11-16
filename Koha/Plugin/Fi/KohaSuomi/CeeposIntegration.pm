@@ -119,7 +119,7 @@ sub table {
     my $dbh = C4::Context->dbh;
     my $transactions = $self->get_qualified_table_name('transactions');
     $dbh->do("
-        CREATE TABLE ".$transactions." (
+        CREATE TABLE IF NOT EXISTS ".$transactions." (
             payment_id int(11) NOT NULL auto_increment,
             transaction_id varchar(150) NOT NULL,
             borrowernumber int(11) DEFAULT NULL,
