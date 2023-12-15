@@ -9,18 +9,20 @@ use base qw(Koha::Plugins::Base);
 use C4::Context;
 use utf8;
 use JSON;
+use YAML::XS;
+use Encode;
 
 use Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Database;
 
 ## Here we set our plugin version
-our $VERSION = "1.0.0";
+our $VERSION = "1.1.0";
 
 ## Here is our metadata, some keys are required, some are optional
 our $metadata = {
     name            => 'Ceepos-kassaintegraatio',
     author          => 'Johanna Räisä',
     date_authored   => '2022-03-30',
-    date_updated    => '2022-08-09',
+    date_updated    => '2023-12-15',
     minimum_version => '21.11.00.000',
     maximum_version => '',
     version         => $VERSION,
@@ -71,6 +73,22 @@ sub configure {
         $self->go_home();
     }
 }
+
+## If your plugin needs to add some javascript in the staff intranet, you'll want
+## to return that javascript here. Don't forget to wrap your javascript in
+## <script> tags. By not adding them automatically for you, you'll have a
+## chance to include other javascript files if necessary.
+sub intranet_js {
+    my ( $self ) = @_;
+
+    my $pluginpath = $self->get_plugin_http_path();
+    my $config = YAML::XS::Load(Encode::encode_utf8($self->retrieve_data('ceeposintegration')));
+    my $configKeys = join("','", keys %$config);
+    my $scripts = "<script>var ceeposBranches = ['".$configKeys."']; // Define the button visibility by library</script>";
+    $scripts .= '<script src="'.$pluginpath.'/js/ceeposButton.js"></script>';
+    return $scripts;
+}
+
 ## This is the 'install' method. Any database tables or other setup that should
 ## be done when the plugin if first installed should be executed in this method.
 ## The installation method should always return true if the installation succeeded
