@@ -1,5 +1,4 @@
 $(document).ready(function () {
-  console.log("ceeposButton.js loaded");
   if (
     window.location.pathname == "/cgi-bin/koha/members/paycollect.pl" &&
     !window.location.search.includes("WRITEOFF")
