@@ -1,4 +1,5 @@
 $(document).ready(function () {
+  console.log("ceeposButton.js loaded");
   if (
     window.location.pathname == "/cgi-bin/koha/members/paycollect.pl" &&
     !window.location.search.includes("WRITEOFF")
@@ -18,10 +19,10 @@ $(document).ready(function () {
         $("#payment_type").val(localStorage.getItem("ceeposOffice"));
       }
     }
-    $("#paycollect").hide();
-    $("#circmessages a[href*='/cgi-bin/koha/members/paycollect.pl'").hide();
-    $("#patron_messages a[href*='/cgi-bin/koha/members/paycollect.pl'").hide();
   }
+  $("#paycollect").hide();
+  $("#circmessages a[href*='/cgi-bin/koha/members/paycollect.pl'").hide();
+  $("#patron_messages a[href*='/cgi-bin/koha/members/paycollect.pl'").hide();
 });
 
 function setCeeposPayment(element) {
