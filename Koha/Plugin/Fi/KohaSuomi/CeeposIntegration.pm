@@ -82,7 +82,8 @@ sub intranet_js {
     my ( $self ) = @_;
 
     my $pluginpath = $self->get_plugin_http_path();
-    my $config = YAML::XS::Load(Encode::encode_utf8($self->retrieve_data('ceeposintegration')));
+    my $config_data = $self->retrieve_data('ceeposintegration');
+    my $config = YAML::XS::Load(Encode::encode_utf8($config_data)) if $config_data;
     my $configKeys = join("','", keys %$config);
     my $scripts = "<script>var ceeposBranches = ['".$configKeys."']; // Define the button visibility by library</script>";
     $scripts .= '<script src="'.$pluginpath.'/js/ceeposButton.js"></script>';
