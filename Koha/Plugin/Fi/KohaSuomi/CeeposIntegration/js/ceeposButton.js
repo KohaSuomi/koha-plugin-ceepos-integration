@@ -12,7 +12,7 @@ $(document).ready(function () {
         .find("input")
         .hide()
         .after(
-          '<input type="button" id="CeeposMaksu" class="btn btn-primary" style="margin-left:3px;" value="Ceeposmaksu" onclick="setCeeposPayment($(this))"/>'
+          '<input type="button" id="CeeposMaksu" class="btn btn-primary" style="margin-left:3px;" value="Ceepos-maksu" onclick="setCeeposPayment($(this))"/>'
         );
       if (localStorage.getItem("ceeposOffice")) {
         $("#payment_type").val(localStorage.getItem("ceeposOffice"));
