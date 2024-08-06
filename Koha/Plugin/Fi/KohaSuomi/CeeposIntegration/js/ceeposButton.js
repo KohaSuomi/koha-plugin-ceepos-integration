@@ -30,7 +30,7 @@ function setCeeposPayment(element) {
   localStorage.setItem("ceeposOffice", ceeposOffice);
   let payments;
   let borrowernumber;
-  if ($("#payindivfine").find("#pay_individual").val() == 1) {
+  if ($("#payindivfine").find("#pay_individual").val() == 'cud-pay_individual') {
     borrowernumber = $("#payindivfine").find("#borrowernumber").val();
     payments = [
       {
