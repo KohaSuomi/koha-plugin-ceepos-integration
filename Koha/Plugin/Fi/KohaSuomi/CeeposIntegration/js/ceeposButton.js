@@ -10,6 +10,7 @@ $(document).ready(function () {
     ) {
       $("#payfine .action, #payindivfine .action")
         .find("input")
+        .last()
         .hide()
         .after(
           '<input type="button" id="CeeposMaksu" class="btn btn-primary" style="margin-left:3px;" value="Ceepos-maksu" onclick="setCeeposPayment($(this))"/>'
