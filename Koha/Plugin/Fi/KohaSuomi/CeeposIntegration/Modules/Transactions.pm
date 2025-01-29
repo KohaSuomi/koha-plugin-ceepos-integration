@@ -29,6 +29,7 @@ use Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions;
 use C4::Context;
 use Encode;
 use Koha::Account::Lines;
+use Koha::Database;
 use Data::Dumper;
 use C4::Log;
 
@@ -232,7 +233,7 @@ sub completePayment {
         #return if defined $transaction->accountlines_id;
         # Reverse the payment if old status is different than new status (and either paid or cancelled)
         if (defined $transaction->{accountlines_id} && (($old_status eq "paid" and $new_status eq "cancelled") or ($old_status eq "cancelled" and $new_status eq "paid"))){
-            $self->reversePayment($transaction->{accountlines_id});
+            $self->refundPayment($transaction->{accountlines_id}, $branch);
             $self->void({ status => $status, description => $transaction->{description} . "\n\nPayment was reverted after it has already been paid", payment_id => $transaction->{payment_id}});
             next;
         }
@@ -294,40 +295,56 @@ sub payAccountlines {
     );
 }
 
-sub reversePayment {
-    my ( $self, $accountlines_id ) = @_;
+sub refundPayment {
+    my ( $self, $accountlines_id, $library_id ) = @_;
     my $dbh = C4::Context->dbh;
 
-    my $sth = $dbh->prepare('SELECT * FROM accountlines WHERE accountlines_id = ?');
-    $sth->execute( $accountlines_id );
-    my $row = $sth->fetchrow_hashref();
-    my $amount_outstanding = $row->{'amountoutstanding'};
+    my $line = Koha::Account::Lines->find($accountlines_id);
+    my $amount_outstanding = $line->amountoutstanding;
+    my $amount = $line->amount;
 
-    if ( $amount_outstanding <= 0 ) {
-        $sth = $dbh->prepare('UPDATE accountlines SET amountoutstanding = amount * -1, description = CONCAT( description, " Reversed -" ) WHERE accountlines_id = ?');
-        $sth->execute( $accountlines_id );
-    } else {
-        $sth = $dbh->prepare('UPDATE accountlines SET amountoutstanding = 0, description = CONCAT( description, " Reversed -" ) WHERE accountlines_id = ?');
-        $sth->execute( $accountlines_id );
-    }
+    my $manager_id = 0;
+    $manager_id = C4::Context->userenv->{'number'} if C4::Context->userenv;
+
+    my $schema         = Koha::Database->new->schema;
+    $schema->txn_do(
+        sub {
+
+            my $refund = $line->reduce(
+                {
+                    reduction_type => 'REFUND',
+                    branch         => $library_id,
+                    staff_id       => $manager_id,
+                    interface      => 'intranet',
+                    amount         => $amount
+                }
+            );
+            my $payout = $refund->payout(
+                {
+                    payout_type   => 'CEEPOS',
+                    branch        => $library_id,
+                    staff_id      => $manager_id,
+                    interface     => 'intranet',
+                    amount        => $amount
+                }
+            );
+            $payout->note($line->note)->store();
+        }
+    );
 
     if ( C4::Context->preference("FinesLog") ) {
-        my $manager_id = 0;
-        $manager_id = C4::Context->userenv->{'number'} if C4::Context->userenv;
 
         if ( $amount_outstanding <= 0 ) {
-            $row->{'amountoutstanding'} *= -1;
+            $amount_outstanding *= -1;
         } else {
-            $row->{'amountoutstanding'} = '0';
+            $amount_outstanding = 0;
         }
-        $row->{'description'} .= ' Reversed -';
-        C4::Log::logaction("FINES", 'MODIFY', $row->{'borrowernumber'}, Dumper({
-            action                => 'reverse_fee_payment',
-            borrowernumber        => $row->{'borrowernumber'},
-            old_amountoutstanding => $row->{'amountoutstanding'},
-            new_amountoutstanding => 0 - $amount_outstanding,,
-            accountlines_id       => $row->{'accountlines_id'},
-            accountno             => $row->{'accountno'},
+        C4::Log::logaction("FINES", 'MODIFY', $line->borrowernumber, Dumper({
+            action                => 'refund_payment',
+            borrowernumber        => $line->borrowernumber,
+            old_amountoutstanding => $line->amountoutstanding,
+            new_amountoutstanding => 0 - $amount_outstanding,
+            accountlines_id       => $accountlines_id,
             manager_id            => $manager_id,
         }));
 
