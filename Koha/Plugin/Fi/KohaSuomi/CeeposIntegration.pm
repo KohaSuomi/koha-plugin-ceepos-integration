@@ -26,7 +26,7 @@ our $metadata = {
     minimum_version => '21.11.00.000',
     maximum_version => '',
     version         => $VERSION,
-    description     => 'Ceepos-kassaintegraatio',
+    description     => 'Ceepos-kassaintegraatio. (Paikalliskannat, jos Ceepos on käytössä)',
 };
 
 ## This is the minimum code required for a plugin's 'new' method
