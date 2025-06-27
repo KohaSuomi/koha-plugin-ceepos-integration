@@ -1,13 +1,13 @@
 [% USE KohaDates %]
 [% INCLUDE 'doc-head-open.inc' %]
- <title>Koha-Suomi - Siirtotyökalu - Asetukset</title>
+ <title>Koha-Suomi - Ceepos-kassaintegraatio - Asetukset</title>
 [% INCLUDE 'doc-head-close.inc' %]
 </head>
 <body>
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
 
-<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Etusivu</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugit</a> &rsaquo; Siirtoraportti &rsaquo; Asetukset</div>
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Etusivu</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Liitännäiset</a> &rsaquo; Ceepos-kassaintegraatio &rsaquo; Asetukset</div>
 
 <div id="doc3">
 
