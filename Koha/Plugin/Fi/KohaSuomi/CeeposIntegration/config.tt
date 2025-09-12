@@ -9,7 +9,7 @@
 
 <div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Etusivu</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Liitännäiset</a> &rsaquo; Ceepos-kassaintegraatio &rsaquo; Asetukset</div>
 
-<div id="doc3">
+<div id="doc3" style="margin: 10px;">
 
     <h3>Koha-Suomi Ceepos-kassaintegraation asetukset</h3>
 
