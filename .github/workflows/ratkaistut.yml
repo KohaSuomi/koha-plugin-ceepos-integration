@@ -12,8 +12,8 @@ jobs:
     steps:
       - uses: actions/stale@v10
         with:
-          days-before-issue-stale: 15
-          days-before-issue-close: 15
+          days-before-issue-stale: 1
+          days-before-issue-close: 1
           stale-issue-label: "stale"
           stale-issue-message: "Tämä tiketti on ollut 15 päivää Ratkaisu ehdotettu -tilassa."
           close-issue-message: "Tämä tiketti suljettiin automaattisesti, koska se on ollut 30 päivää Ratkaisu ehdotettu -tilassa."
