@@ -1,7 +1,7 @@
 name: Close inactive issues
 on:
   schedule:
-    - cron: "00 8 * * *"
+    - cron: "05 8 * * *"
 
 jobs:
   close-issues:
@@ -14,7 +14,7 @@ jobs:
         with:
           days-before-issue-stale: 15
           days-before-issue-close: 15
-          stale-issue-label: "status:Ratkaisu ehdotettu"
+          stale-issue-label: "stale"
           stale-issue-message: "Tämä tiketti on ollut 15 päivää Ratkaisu ehdotettu -tilassa."
           close-issue-message: "Tämä tiketti suljettiin automaattisesti, koska se on ollut 30 päivää Ratkaisu ehdotettu -tilassa."
           days-before-pr-stale: -1
