@@ -1,0 +1,22 @@
+name: Close inactive issues
+on:
+  schedule:
+    - cron: "00 8 * * *"
+
+jobs:
+  close-issues:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v10
+        with:
+          days-before-issue-stale: 15
+          days-before-issue-close: 15
+          stale-issue-label: "status:Ratkaisu ehdotettu"
+          stale-issue-message: "Tämä tiketti on ollut 15 päivää Ratkaisu ehdotettu -tilassa."
+          close-issue-message: "Tämä tiketti suljettiin automaattisesti, koska se on ollut 30 päivää Ratkaisu ehdotettu -tilassa."
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
