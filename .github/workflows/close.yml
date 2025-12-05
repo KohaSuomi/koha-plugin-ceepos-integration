@@ -1,0 +1,17 @@
+name: Close inactive issues
+on:
+  schedule:
+    - cron: "00 5 * * *"
+jobs:
+  close-issues:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v10
+        with:
+          days-before-issue-close: 1
+          close-issue-message: "Tämä tiketti suljettiin automaattisesti, koska se on ollut 1 päivän Ratkaisu ehdotettu -tilassa."
+          close-issue-reason: completed
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
