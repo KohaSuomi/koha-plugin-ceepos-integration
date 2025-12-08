@@ -26,7 +26,7 @@ my $req = HTTP::Request->new(GET => 'http://localhost:5001/');
 my $res = $ua->request($req);
 
 unless ($res->is_success) {
-    plan skip_all => 'Test server not running! Start it: plackup -5001 t/app.psgi';
+    plan skip_all => 'Test server not running! Start it: plackup --port 5001 t/app.psgi';
     exit;
 } else {
     plan tests => 4;
