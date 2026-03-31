@@ -23,6 +23,11 @@ $(document).ready(function () {
   $("#paycollect").hide();
   $("#circmessages a[href*='/cgi-bin/koha/members/paycollect.pl'").hide();
   $("#patron_messages a[href*='/cgi-bin/koha/members/paycollect.pl'").hide();
+
+  // Hide paycollect button on circulation.pl page
+  if (window.location.pathname == "/cgi-bin/koha/circ/circulation.pl") {
+    $("a[href*='/cgi-bin/koha/members/paycollect.pl']").hide();
+  }
 });
 
 function setCeeposPayment(element) {
