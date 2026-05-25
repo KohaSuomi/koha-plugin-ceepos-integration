@@ -19,15 +19,31 @@ our $VERSION = "1.1.0";
 
 ## Here is our metadata, some keys are required, some are optional
 our $metadata = {
-    name            => 'Ceepos-kassaintegraatio',
     author          => 'Johanna Räisä',
     date_authored   => '2022-03-30',
     date_updated    => '2023-12-15',
     minimum_version => '21.11.00.000',
     maximum_version => '',
     version         => $VERSION,
-    description     => 'Ceepos-kassaintegraatio. (Paikalliskannat, jos Ceepos on käytössä)',
 };
+
+sub get_localized_metadata {
+    my ($self) = @_;
+    my $lang = C4::Languages::getlanguage() || 'en';
+    my ($name, $description);
+
+    if ( $lang eq 'sv-SE' ) {
+        $name = "Ceepos integration";
+        $description = "Ceepos integration. (Lokala databaser, om Ceepos används)";
+    } elsif ( $lang eq 'fi-FI' ) {
+        $name = "Ceepos-kassaintegraatio";
+        $description = "Ceepos-kassaintegraatio. (Paikalliskannat, jos Ceepos on käytössä)";
+    } else {
+        $name = "Ceepos Integration";
+        $description = "Ceepos cash register integration. (Local databases if Ceepos is in use)";
+    }
+    return ($name, $description);
+}
 
 ## This is the minimum code required for a plugin's 'new' method
 ## More can be added, but none should be removed
@@ -42,6 +58,10 @@ sub new {
     ## This runs some additional magic and checking
     ## and returns our actual 
     my $self = $class->SUPER::new($args);
+
+    my ($name, $description) = $self->get_localized_metadata();
+    $self->{'metadata'}->{'name'} = $name;
+    $self->{'metadata'}->{'description'} = $description;
 
     return $self;
 }
