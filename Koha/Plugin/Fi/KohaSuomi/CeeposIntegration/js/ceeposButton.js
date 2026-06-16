@@ -8,12 +8,23 @@ $(document).ready(function () {
         $("#logged-in-info-full .logged-in-branch-code").text()
       )
     ) {
+      let htmlLang = document.documentElement.lang || 'en';
+      htmlLang = htmlLang.split('-')[0];
+      if (!['en', 'fi', 'sv'].includes(htmlLang)) {
+        htmlLang = 'en';
+      }
       $("#payfine .action, #payindivfine .action")
         .find("input")
         .last()
         .hide()
         .after(
-          '<input type="button" id="CeeposMaksu" class="btn btn-primary" style="margin-left:3px;" value="Ceepos-maksu" onclick="setCeeposPayment($(this))"/>'
+          '<input type="button" id="CeeposMaksu" class="btn btn-primary" style="margin-left:3px;" value="' +
+            {
+              en: "Ceepos Payment",
+              fi: "Ceepos-maksu",
+              sv: "Ceepos-betalning"
+            }[htmlLang] +
+            '" onclick="setCeeposPayment($(this))"/>'
         );
       if (localStorage.getItem("ceeposOffice")) {
         $("#payment_type").val(localStorage.getItem("ceeposOffice"));

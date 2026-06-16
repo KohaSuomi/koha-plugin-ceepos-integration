@@ -73,25 +73,23 @@ sub new {
 sub configure {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
-    unless ( $cgi->param('save') ) {
-        my $template = $self->get_template({ file => 'config.tt' });
+    my $template = $self->get_template({ file => 'config.tt' });
 
-        ## Grab the values we already have for our settings, if any exist
-        $template->param(
-            ceeposintegration => $self->retrieve_data('ceeposintegration')
-        );
-
-        print $cgi->header(-charset    => 'utf-8');
-        print $template->output();
-    }
-    else {
+    if ( $cgi->param('save') ) {
         $self->store_data(
             {
                 ceeposintegration  => $cgi->param('ceeposintegration')
             }
         );
-        $self->go_home();
+        $template->param( saved => 1 );
     }
+
+    $template->param(
+        ceeposintegration => $self->retrieve_data('ceeposintegration')
+    );
+
+    print $cgi->header(-charset    => 'utf-8');
+    print $template->output();
 }
 
 ## If your plugin needs to add some javascript in the staff intranet, you'll want
