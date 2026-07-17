@@ -77,9 +77,9 @@ function setCeeposPayment(element) {
     data: JSON.stringify(payments),
     beforeSend: function () {
       $("#CeeposMaksu").attr("disabled", true);
-      alert("Maksu lähetetty, käsittele kassassa!");
     },
     success: function (result) {
+      alert("Maksu lähetetty, käsittele kassassa!");
       location.href =
         "/cgi-bin/koha/members/boraccount.pl?borrowernumber=" + borrowernumber;
     },
