@@ -48,7 +48,7 @@ sub pay {
 
         if ($error->isa("Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest")) {
             return $c->render( status  => 400,
-                            openapi => { error => $error->message});
+                            openapi => { error => $error->message, error_code => $error->code});
         }
         $logger->error($error);
         return $c->render( status  => 500,
@@ -75,11 +75,11 @@ sub report {
 
         if ($error->isa("Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest")) {
             return $c->render( status  => 400,
-                            openapi => { error => $error->message});
+                            openapi => { error => $error->message, error_code => $error->code});
         }
         if ($error->isa("Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::NotFound")) {
             return $c->render( status  => 404,
-                            openapi => { error => $error->message});
+                            openapi => { error => $error->message, error_code => $error->code});
         }
         $logger->error($error);
         return $c->render( status  => 500,

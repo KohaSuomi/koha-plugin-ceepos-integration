@@ -137,7 +137,7 @@ sub setPayments {
             next;
         }
         unless ($payment->{office}) {
-            Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw('Office is missing!');
+            Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw(message => 'Office is missing!', code => 'OFFICE_MISSING');
         }
         $payment->{manager_id} = $self->manager;
         $payment->{status} = "unsent";
@@ -172,7 +172,7 @@ sub setPayments {
         $office =~ s/$source//;
         my $response = $self->cpu($self->librarycode)->sendPayments($cpuid, $patron_id, $office);
         if ($response->{error}) {
-            Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw($response->{error});
+            Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw(message => $response->{error}, code => 'CPU_ERROR');
         }
 
         foreach my $accountline_id (@$accountline_ids) {
@@ -192,12 +192,12 @@ sub completePayment {
     
     unless (defined $transactions) {
         $logger->warn("Transaction not found ". $params->{Id});
-        Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::NotFound->throw("Transaction not found");
+        Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::NotFound->throw(message => "Transaction not found", code => 'TRANSACTION_NOT_FOUND');
     }
 
     unless ($self->cpu($branch)->is_valid_hash($params)) {
         $logger->warn("Invalid hash for transaction ".$params->{Id});
-        Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw("Invalid hash for transaction ". $params->{Id});
+        Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw(message => "Invalid hash for transaction ". $params->{Id}, code => 'INVALID_HASH');
     }
 
     my $status = $self->cpu($branch)->_get_response_string($params->{Status})->{status};
@@ -387,7 +387,7 @@ sub _convert_payment_type {
 
     my $config = YAML::XS::Load(Encode::encode_utf8($self->plugin->retrieve_data('ceeposintegration')));
     unless ($config->{$self->librarycode}->{$payment_type}) {
-       Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw('Missing '.$payment_type.' from configuration!');
+       Koha::Plugin::Fi::KohaSuomi::CeeposIntegration::Modules::Exceptions::BadRequest->throw(message => 'Missing '.$payment_type.' from configuration!', code => 'MISSING_PAYMENT_TYPE_CONFIG');
     }
     $payment_type = $config->{$self->librarycode}->{$payment_type};
     return $payment_type;

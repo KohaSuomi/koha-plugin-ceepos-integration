@@ -1,3 +1,51 @@
+function getSupportedLang() {
+  let htmlLang = document.documentElement.lang || "en";
+  htmlLang = htmlLang.split("-")[0];
+  if (!["en", "fi", "sv"].includes(htmlLang)) {
+    htmlLang = "en";
+  }
+  return htmlLang;
+}
+
+const ceeposErrorMessages = {
+  OFFICE_MISSING: {
+    en: "Office is missing!",
+    fi: "Toimipiste puuttuu!",
+    sv: "Kontoret saknas!"
+  },
+  CPU_ERROR: {
+    en: "Payment service error, please try again.",
+    fi: "Maksupalvelun virhe, yritä uudelleen.",
+    sv: "Fel i betalningstjänsten, försök igen."
+  },
+  TRANSACTION_NOT_FOUND: {
+    en: "Transaction not found.",
+    fi: "Tapahtumaa ei löytynyt.",
+    sv: "Transaktionen hittades inte."
+  },
+  INVALID_HASH: {
+    en: "Invalid transaction hash.",
+    fi: "Virheellinen tapahtuman tarkiste.",
+    sv: "Ogiltig transaktionshash."
+  },
+  MISSING_PAYMENT_TYPE_CONFIG: {
+    en: "Payment type is missing from the configuration!",
+    fi: "Maksutyyppi puuttuu asetuksista!",
+    sv: "Betalningstypen saknas i konfigurationen!"
+  }
+};
+
+function translateCeeposError(response) {
+  const htmlLang = getSupportedLang();
+  const translations = response && response.error_code
+    ? ceeposErrorMessages[response.error_code]
+    : undefined;
+  if (translations) {
+    return translations[htmlLang];
+  }
+  return response && response.error;
+}
+
 $(document).ready(function () {
   if (
     window.location.pathname == "/cgi-bin/koha/members/paycollect.pl" &&
@@ -8,11 +56,7 @@ $(document).ready(function () {
         $("#logged-in-info-full .logged-in-branch-code").text()
       )
     ) {
-      let htmlLang = document.documentElement.lang || 'en';
-      htmlLang = htmlLang.split('-')[0];
-      if (!['en', 'fi', 'sv'].includes(htmlLang)) {
-        htmlLang = 'en';
-      }
+      const htmlLang = getSupportedLang();
       $("#payfine .action, #payindivfine .action")
         .find("input")
         .last()
@@ -79,13 +123,20 @@ function setCeeposPayment(element) {
       $("#CeeposMaksu").attr("disabled", true);
     },
     success: function (result) {
-      alert("Maksu lähetetty, käsittele kassassa!");
+      const htmlLang = getSupportedLang();
+      alert(
+        {
+          en: "Payment sent, process at the counter!",
+          fi: "Maksu lähetetty, käsittele kassassa!",
+          sv: "Betalning skickad, behandla vid disken!"
+        }[htmlLang]
+      );
       location.href =
         "/cgi-bin/koha/members/boraccount.pl?borrowernumber=" + borrowernumber;
     },
     error: function (xhr, status, error) {
       $("#CeeposMaksu").attr("disabled", false);
-      alert(JSON.parse(xhr.responseText).error);
+      alert(translateCeeposError(JSON.parse(xhr.responseText)));
     },
   });
 }
