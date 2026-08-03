@@ -87,6 +87,10 @@ $(document).ready(function () {
 
 function setCeeposPayment(element) {
   var ceeposOffice = $("#payment_type").find(":selected").val();
+  if (!ceeposOffice) {
+    alert(translateCeeposError({ error_code: "OFFICE_MISSING" }));
+    return;
+  }
   localStorage.setItem("ceeposOffice", ceeposOffice);
   let payments;
   let borrowernumber;
@@ -121,8 +125,6 @@ function setCeeposPayment(element) {
     data: JSON.stringify(payments),
     beforeSend: function () {
       $("#CeeposMaksu").attr("disabled", true);
-    },
-    success: function (result) {
       const htmlLang = getSupportedLang();
       alert(
         {
@@ -131,6 +133,8 @@ function setCeeposPayment(element) {
           sv: "Betalning skickad, behandla vid disken!"
         }[htmlLang]
       );
+    },
+    success: function (result) {
       location.href =
         "/cgi-bin/koha/members/boraccount.pl?borrowernumber=" + borrowernumber;
     },
